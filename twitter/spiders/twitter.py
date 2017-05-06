@@ -1,6 +1,7 @@
 import re
 import json
 import scrapy
+import requests
 
 from scrapy.selector import Selector
 
@@ -8,15 +9,14 @@ class TwiterUserSpider(scrapy.Spider):
     name = "twitter"
     allowed_domains = ["twitter.com"]
 
-    def __init__(self, urls=None):
+    def __init__(self, urls_file=None, urls_link=None):
         self.page_position_rgx = re.compile(r'data-min-position="([^"]+?)"')
         self.scroll_content = 'https://twitter.com/i/profiles/show/{user}' \
                 '/timeline/tweets?include_available_features=1' \
                 '&include_entities=1&max_position={page_position}' \
                 '&reset_error_state=false'
 
-        self.urls = []
-        self._populate_urls(urls)
+        self.urls = self._populate_urls(urls_file, urls_link)
 
 
     def start_requests(self):
@@ -100,9 +100,37 @@ class TwiterUserSpider(scrapy.Spider):
         return user[1:] # remove preceeding slash
 
 
-    def _populate_urls(self, file_path):
-        """This reads the file containing the urls to crawl, provided in the command line."""
+    def _populate_urls(self, urls_file, urls_link):
+        """This return the list urls to crawl based on the arguments provided in the command line.
 
-        with open(file_path, 'r') as f:
+        The urls can either be from a file or a link, with the following precedence:
+            1. FILE
+            2. LINK
+        """
+        
+        return self._read_url_file(urls_file) or self._read_url_link(urls_link)
+
+
+    def _read_url_file(self, urls_file):
+        if urls_file is None:
+            return None
+
+        urls = []
+
+        with open(urls_file, 'r') as f:
             for line in f:
-                self.urls.append(line.strip())
+                urls.append(line.strip())
+
+        return urls
+
+
+    def _read_url_link(self, urls_link):
+        if urls_link is None:
+            return None
+
+        req = requests.get(urls_link)
+
+        if req.status_code != 200:
+            return None
+
+        return [url.strip() for url in req.text.split('\n')]
