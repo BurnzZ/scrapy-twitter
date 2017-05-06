@@ -74,6 +74,8 @@ SAVE_PATH = {
     'tweets' : './_data/tweets/'
 }
 
+MIN_TWEET_LENGTH = 40
+
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html
 #AUTOTHROTTLE_ENABLED = True

@@ -13,13 +13,23 @@ from scrapy.conf import settings
 
 class FilterTweetsPipeline(object):
     """This drops items that are either of the following:
-    * retweets
+        * retweets
+        * tweet having content less than the specified in the settings
     """
+
+    def __init__(self):
+        self.min_tweet_length = settings['MIN_TWEET_LENGTH']
+
 
     def process_item(self, item, spider):
 
-        if not self._is_retweet(item['tweet']):
-            raise DropItem("Dropping a retweet.")
+        tweet = item['tweet']
+
+        if not self._is_retweet(tweet):
+            raise DropItem("item is a retweet.")
+
+        if not self._has_enough_content(tweet, self.min_tweet_length):
+            raise DropItem("item has less than {} characters.".format(self.min_tweet_length))
 
         return item
 
@@ -33,6 +43,16 @@ class FilterTweetsPipeline(object):
         if tweet.css('::attr(data-retweet-id)').extract_first() is None:
             return True
         return False
+
+
+    def _has_enough_content(self, tweet, length):
+        """This returns False if a tweet contains characters which are less than the specified length."""
+
+        content = tweet.css('p.tweet-text::text').extract_first()
+
+        if content is None or len(content) < length:
+            return False
+        return True
 
 
 class CleanTweetsPipeline(object):
