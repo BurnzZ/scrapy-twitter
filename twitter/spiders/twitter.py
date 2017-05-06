@@ -1,10 +1,19 @@
 import scrapy
 
-
 class TwiterUserSpider(scrapy.Spider):
     name = "twitter"
     allowed_domains = ["twitter.com"]
-    start_urls = ['http://twitter.com/aprilleetan']
+
+    def __init__(self, urls=None):
+        self.urls = []
+
+        self._populate_urls(urls)
+
+
+    def start_requests(self):
+        for url in self.urls:
+            yield scrapy.Request(url=url, callback=self.parse)
+
 
     def parse(self, response):
 
@@ -16,3 +25,10 @@ class TwiterUserSpider(scrapy.Spider):
                 'tweet': tweet,
                 'user': user
             }
+
+    def _populate_urls(self, file_path):
+        """This reads the file containing the urls to crawl, provided in the command line."""
+
+        with open(file_path, 'r') as f:
+            for line in f:
+                self.urls.append(line.strip())
