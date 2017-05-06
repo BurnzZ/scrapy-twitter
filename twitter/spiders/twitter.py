@@ -59,6 +59,9 @@ class TwiterUserSpider(scrapy.Spider):
         for tweet in self._yield_tweets(user, html_page):
             yield tweet
 
+        if raw_scroll_data['has_more_items'] is False:
+            return 
+
         for tweet in self._load_scroll_content(user, response, page_position):
             yield tweet
 
