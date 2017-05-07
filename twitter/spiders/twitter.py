@@ -9,14 +9,14 @@ class TwiterUserSpider(scrapy.Spider):
     name = "twitter"
     allowed_domains = ["twitter.com"]
 
-    def __init__(self, urls_file=None, urls_link=None):
+    def __init__(self, urls_file=None, urls_link=None, combine_urls=False):
         self.page_position_rgx = re.compile(r'data-min-position="([^"]+?)"')
         self.scroll_content = 'https://twitter.com/i/profiles/show/{user}' \
                 '/timeline/tweets?include_available_features=1' \
                 '&include_entities=1&max_position={page_position}' \
                 '&reset_error_state=false'
 
-        self.urls = self._populate_urls(urls_file, urls_link)
+        self.urls = self._populate_urls(urls_file, urls_link, combine_urls)
 
 
     def start_requests(self):
@@ -100,15 +100,27 @@ class TwiterUserSpider(scrapy.Spider):
         return user[1:] # remove preceeding slash
 
 
-    def _populate_urls(self, urls_file, urls_link):
+    def _populate_urls(self, urls_file, urls_link, combine_urls):
         """This return the list urls to crawl based on the arguments provided in the command line.
 
-        The urls can either be from a file or a link, with the following precedence:
+        Moreover, urls from both resources can be opted to be combined or not via the `combine` boolean flag.
+        Combining them would need both url resource arguments to be present.
+
+        Consequently, if `combine_urls` is set to False, it takes the following precedence based on availability:
             1. FILE
             2. LINK
         """
+
+        from_file = self._read_url_file(urls_file)
+        from_link = self._read_url_link(urls_link)
         
-        return self._read_url_file(urls_file) or self._read_url_link(urls_link)
+        if combine_urls:
+            if not (from_file and from_link):
+                raise AttributeError("URL resources from file and link must both be present to combine.")
+            return list(set(from_file + from_link))
+
+        # not combining URLS would have employ the precedence
+        return from_file or from_link
 
 
     def _read_url_file(self, urls_file):
