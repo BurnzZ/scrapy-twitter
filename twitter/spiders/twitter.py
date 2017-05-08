@@ -27,11 +27,8 @@ class TwiterUserSpider(scrapy.Spider):
     def parse(self, response):
         user = self._get_user(response)
 
-        for tweet in self._yield_tweets(user, response):
-            yield tweet
-
-        for tweet in self._load_scroll_content(user, response):
-            yield tweet
+        yield from self._yield_tweets(user, response)
+        yield from self._load_scroll_content(user, response)
 
 
     def _load_scroll_content(self, user, response, page_position=None):
@@ -56,14 +53,12 @@ class TwiterUserSpider(scrapy.Spider):
         html_page = Selector(text=raw_scroll_data['items_html'])
         page_position = raw_scroll_data['min_position']
 
-        for tweet in self._yield_tweets(user, html_page):
-            yield tweet
+        yield from self._yield_tweets(user, html_page)
 
         if raw_scroll_data['has_more_items'] is False:
             return 
 
-        for tweet in self._load_scroll_content(user, response, page_position):
-            yield tweet
+        yield from self._load_scroll_content(user, response, page_position)
 
     
     def _yield_tweets(self, user, response):
