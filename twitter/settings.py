@@ -66,8 +66,9 @@ DOWNLOAD_DELAY = 3
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
     'twitter.pipelines.FilterTweetsPipeline': 200,
-    'twitter.pipelines.CleanTweetsPipeline': 300,
-    'twitter.pipelines.FileSavePipeline': 400
+    'twitter.pipelines.DataShapePipeline': 300,
+    'twitter.pipelines.CleanTweetsPipeline': 400,
+    'twitter.pipelines.FileSavePipeline': 500
 }
 
 SAVE_PATH = {

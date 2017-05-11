@@ -5,6 +5,7 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 
+import re
 import os
 import json
 
@@ -55,10 +56,9 @@ class FilterTweetsPipeline(object):
         return True
 
 
-class CleanTweetsPipeline(object):
+class DataShapePipeline(object):
     """This extracts the necessary text-data from the Selectors returned by Spiders."""
     
-
     def process_item(self, item, spider):
 
         data = {
@@ -69,6 +69,30 @@ class CleanTweetsPipeline(object):
         }
 
         return data
+
+
+class CleanTweetsPipeline(object):
+    """This removes unnecessary texts in tweet texts."""
+
+    # any substrings matched in these regexes are removed from the tweet itself
+    REGEX = [
+        # This matches urls starting in 'http'
+        re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'),
+
+        # This are for the links included in tweets with images uploaded
+        re.compile(r'pic\.twitter\.com\/[a-zA-Z1-9]+')
+    ]
+
+    def process_item(self, item, spider):
+
+        for rgx in self.REGEX:
+            match = rgx.search(item['tweet'])
+
+            if match is not None:
+                item['tweet'] = rgx.sub('', item['tweet'])
+                spider.log("'{0}' has been removed from the tweet.".format(match.group()))
+       
+        return item
      
 
 class FileSavePipeline(object):
