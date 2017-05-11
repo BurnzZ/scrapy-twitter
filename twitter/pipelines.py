@@ -62,9 +62,9 @@ class CleanTweetsPipeline(object):
     def process_item(self, item, spider):
 
         data = {
-            'tweet_id': item['tweet'].css('::attr(data-tweet-id)').extract_first()
-            'user': item['user']
-            'time_epoch':item['tweet'].css('span._timestamp::attr(data-time)').extract_first()
+            'tweet_id': item['tweet'].css('::attr(data-tweet-id)').extract_first(),
+            'user': item['user'],
+            'time_epoch':item['tweet'].css('span._timestamp::attr(data-time)').extract_first(),
             'tweet': ''.join(item['tweet'].css('p.tweet-text ::text').extract())
         }
 
